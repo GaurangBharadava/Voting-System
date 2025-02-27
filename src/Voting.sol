@@ -7,6 +7,8 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 contract voting is Ownable, AccessControl {
     error Voting__cannotAddCandidateWhileVotingPeriod();
 
+    event candidateAdded();
+
     bytes32 private constant ROLE = keccak256("ADMIN");
     mapping(address voter => bool registered) private s_voterToRegister;
     mapping(address voter => bool voted) private s_voterToVoted;
@@ -37,5 +39,6 @@ contract voting is Ownable, AccessControl {
         totalCandidate = totalCandidate + 1;
         s_candidateExist[_name] = true;
         s_candidate[totalCandidate] = Candidate(totalCandidate, 0, _name, _party);
+        emit candidateAdded();
     }
 }
