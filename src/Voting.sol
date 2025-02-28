@@ -54,7 +54,7 @@ contract voting is Ownable, AccessControl {
         verifyVoter(_aadharNumber);
         totalVoters = totalVoters + 1;
         s_voterToRegister[_aadharNumber] = true;
-        s_voter[_aadharNumber] = Voter(_account,_aadharNumber,0,0);
+        s_voter[_aadharNumber] = Voter(_account, _aadharNumber, 0, 0);
         emit voterRegistered(_account, _aadharNumber);
     }
 
@@ -66,7 +66,7 @@ contract voting is Ownable, AccessControl {
     }
 
     function endVoting() external onlyOwner onlyRole(ROLE) {
-        if(!start) {
+        if (!start) {
             revert Voting__votingIsNotStarted();
         }
         require(block.timestamp >= s_startTime + s_duration, "voting duration is not completed");
@@ -80,17 +80,17 @@ contract voting is Ownable, AccessControl {
         require(!_candidateExist(_name), "Candidate is already exist");
     }
 
-    function getCandidate(uint256 id) external view returns(Candidate memory) {
+    function getCandidate(uint256 id) external view returns (Candidate memory) {
         return s_candidate[id];
     }
 
-    function getVoter(string memory _aadharNumber) external view returns(Voter memory) {
+    function getVoter(string memory _aadharNumber) external view returns (Voter memory) {
         return s_voter[_aadharNumber];
     }
 
-    function _candidateExist(string memory name) private view returns(bool) {
+    function _candidateExist(string memory name) private view returns (bool) {
         return s_candidateExist[name];
-    } 
+    }
 
     function checkForVotingStatus() public view {
         if (start) {
@@ -103,7 +103,7 @@ contract voting is Ownable, AccessControl {
         require(!_voterExist(_aadharNumber), "Voter is already exist");
     }
 
-    function _voterExist(string memory _aadharNumber) private view returns(bool) {
+    function _voterExist(string memory _aadharNumber) private view returns (bool) {
         return s_voterToRegister[_aadharNumber];
     }
 }
