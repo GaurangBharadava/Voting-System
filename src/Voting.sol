@@ -4,25 +4,26 @@ pragma solidity ^0.8.24;
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract voting is Ownable, AccessControl {
+contract Voting is Ownable, AccessControl {
     error Voting__votingIsStarted();
     error Voting__votingIsNotStarted();
 
     event candidateAdded(string name, string party);
     event voterRegistered(address account, string aadharNumber);
 
-    bytes32 private constant ROLE = keccak256("ADMIN");
+    bytes32 private constant ROLE = keccak256("ADMIN_ROLE");
     mapping(string => bool) private s_voterToRegister;
     mapping(string => bool) private s_voterToVoted;
     mapping(string => bool) private s_candidateExist;
     mapping(uint256 id => Candidate) private s_candidate;
     mapping(string => Voter) private s_voter;
+    mapping(address => string) private s_addressToAadhar;
     uint256 public totalCandidate = 0;
     uint256 public totalVoters = 0;
     uint256 public totalVotes = 0;
-    uint256 s_duration;
-    uint256 s_startTime;
-    bool start = false;
+    uint256 public s_duration;
+    uint256 public s_startTime;
+    bool public start = false;
 
     struct Candidate {
         uint256 id;
@@ -39,7 +40,7 @@ contract voting is Ownable, AccessControl {
     }
 
     constructor() Ownable(msg.sender) {
-        grantRole(ROLE, owner());
+        _grantRole(ROLE, msg.sender);
     }
 
     function addCandidte(string memory _name, string memory _party) external onlyOwner onlyRole(ROLE) {
@@ -54,6 +55,7 @@ contract voting is Ownable, AccessControl {
         verifyVoter(_aadharNumber);
         totalVoters = totalVoters + 1;
         s_voterToRegister[_aadharNumber] = true;
+        s_addressToAadhar[msg.sender] = _aadharNumber;
         s_voter[_aadharNumber] = Voter(_account, _aadharNumber, 0, 0);
         emit voterRegistered(_account, _aadharNumber);
     }
@@ -65,14 +67,29 @@ contract voting is Ownable, AccessControl {
         s_startTime = block.timestamp;
     }
 
+    function vote(uint256 _id) external {
+        string memory aadhar = s_addressToAadhar[msg.sender];
+        require(s_voterToRegister[aadhar], "Voter does not registered");
+        require(!s_voterToVoted[aadhar], "Voter has already voted");
+        Candidate storage candidate = s_candidate[_id];
+        string memory name = candidate.name;
+        require(s_candidateExist[name], "Candidate does not exist");
+        Voter storage voter = s_voter[aadhar];
+        totalVotes = totalVotes + 1;
+        s_voterToVoted[aadhar] = true;
+        voter.votedCandidateId = _id;
+        voter.voteCount++;
+        candidate.voteCount++;
+    }
+
     function endVoting() external onlyOwner onlyRole(ROLE) {
         if (!start) {
             revert Voting__votingIsNotStarted();
         }
         require(block.timestamp >= s_startTime + s_duration, "voting duration is not completed");
         s_duration = 0;
-        start = false;
         s_startTime = 0;
+        start = false;
     }
 
     function verifyCandidate(string memory _name) public view {
@@ -105,5 +122,9 @@ contract voting is Ownable, AccessControl {
 
     function _voterExist(string memory _aadharNumber) private view returns (bool) {
         return s_voterToRegister[_aadharNumber];
+    }
+
+    function role() external pure returns (bytes32) {
+        return ROLE;
     }
 }
