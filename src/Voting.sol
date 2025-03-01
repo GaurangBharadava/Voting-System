@@ -55,7 +55,7 @@ contract Voting is Ownable, AccessControl {
         verifyVoter(_aadharNumber);
         totalVoters = totalVoters + 1;
         s_voterToRegister[_aadharNumber] = true;
-        s_addressToAadhar[msg.sender] = _aadharNumber;
+        s_addressToAadhar[_account] = _aadharNumber;
         s_voter[_aadharNumber] = Voter(_account, _aadharNumber, 0, 0);
         emit voterRegistered(_account, _aadharNumber);
     }
