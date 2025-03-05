@@ -18,12 +18,14 @@ contract Voting is Ownable, AccessControl {
     mapping(uint256 id => Candidate) private s_candidate;
     mapping(string => Voter) private s_voter;
     mapping(address => string) private s_addressToAadhar;
+    Candidate[] private s_candidateList;
     uint256 public totalCandidate = 0;
     uint256 public totalVoters = 0;
     uint256 public totalVotes = 0;
     uint256 public s_duration;
     uint256 public s_startTime;
     bool public start = false;
+    Candidate public winner;
 
     struct Candidate {
         uint256 id;
@@ -48,6 +50,7 @@ contract Voting is Ownable, AccessControl {
         totalCandidate = totalCandidate + 1;
         s_candidateExist[_name] = true;
         s_candidate[totalCandidate] = Candidate(totalCandidate, 0, _name, _party);
+        s_candidateList.push(s_candidate[totalCandidate]);
         emit candidateAdded(_name, _party);
     }
 
@@ -82,7 +85,7 @@ contract Voting is Ownable, AccessControl {
         candidate.voteCount++;
     }
 
-    function endVoting() external onlyOwner onlyRole(ROLE) {
+    function endVoting() external onlyOwner onlyRole(ROLE) returns(Candidate memory) {
         if (!start) {
             revert Voting__votingIsNotStarted();
         }
@@ -90,6 +93,20 @@ contract Voting is Ownable, AccessControl {
         s_duration = 0;
         s_startTime = 0;
         start = false;
+        winner = _selectWinner();
+        return winner;
+    }
+
+    function _selectWinner() private view returns(Candidate memory) {
+        uint256 id = 0;
+        uint256 smaller = 0;
+        for(uint256 i=1;i<s_candidateList.length;i++) {
+            if(smaller < s_candidate[i].voteCount) {
+                smaller = s_candidate[i].voteCount;
+                id = i;
+            }
+        }
+        return s_candidate[id];
     }
 
     function verifyCandidate(string memory _name) public view {
