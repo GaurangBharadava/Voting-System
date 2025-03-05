@@ -100,7 +100,8 @@ contract Voting is Ownable, AccessControl {
     function _selectWinner() private view returns (Candidate memory) {
         uint256 id = 0;
         uint256 smaller = 0;
-        for (uint256 i = 1; i < s_candidateList.length; i++) {
+        uint256 length = s_candidateList.length;
+        for (uint256 i = 1; i < length; i++) {
             if (smaller < s_candidate[i].voteCount) {
                 smaller = s_candidate[i].voteCount;
                 id = i;
